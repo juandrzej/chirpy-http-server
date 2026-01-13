@@ -13,12 +13,13 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +0 main.go
+badd +1 main.go
+badd +1 index.html
 argglobal
 %argdel
 edit main.go
 argglobal
-balt main.go
+balt index.html
 setlocal foldmethod=manual
 setlocal foldexpr=0
 setlocal foldmarker={{{,}}}
