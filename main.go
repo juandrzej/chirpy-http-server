@@ -6,13 +6,13 @@ import (
 )
 
 func main() {
-	serverHandler := http.NewServeMux()
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir(".")))
+
 	server := http.Server{
-		Handler: serverHandler,
+		Handler: mux,
 		Addr:    ":8080",
 	}
-
-	serverHandler.Handle("/", http.FileServer(http.Dir(".")))
 
 	log.Fatal(server.ListenAndServe())
 }
