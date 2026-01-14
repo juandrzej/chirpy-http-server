@@ -13,7 +13,7 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +1 main.go
+badd +9 main.go
 badd +1 index.html
 argglobal
 %argdel
