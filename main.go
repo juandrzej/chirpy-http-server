@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
@@ -74,7 +75,24 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]bool{"valid": true})
+	params.Body = cleanChirp(params.Body)
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"cleaned_body": params.Body})
+}
+
+func cleanChirp(body string) string {
+	forbiddenWords := []string{"kerfuffle", "sharbert", "fornax"}
+	words := strings.Split(body, " ")
+
+	for i, word := range words {
+		for _, forbiddenWord := range forbiddenWords {
+			if strings.ToLower(word) == forbiddenWord {
+				words[i] = "****"
+			}
+		}
+	}
+
+	return strings.Join(words, " ")
 }
 
 func main() {
