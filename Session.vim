@@ -20,6 +20,8 @@ badd +1 start_postgresql
 badd +1 start_server
 badd +1 .gitignore
 badd +1 .env
+badd +1 sqlc.yaml
+badd +1 sql/queries/users.sql
 argglobal
 %argdel
 edit main.go
@@ -42,7 +44,7 @@ set winwidth=1
 exe 'vert 1resize ' . ((&columns * 118 + 118) / 237)
 exe 'vert 2resize ' . ((&columns * 118 + 118) / 237)
 argglobal
-balt .env
+balt sql/queries/users.sql
 setlocal foldmethod=manual
 setlocal foldexpr=0
 setlocal foldmarker={{{,}}}
