@@ -1,18 +1,23 @@
 package main
 
-import _ "github.com/lib/pq"
-
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"sync/atomic"
+
+	"github.com/joho/godotenv"
+	"github.com/juandrzej/chirpy-http-server/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	db             *database.Queries
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -98,8 +103,19 @@ func cleanChirp(body string) string {
 }
 
 func main() {
+	godotenv.Load()
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbQueries := database.New(db)
+
 	// Patterns generally look like this: [METHOD ][HOST]/[PATH]. Note that all three parts are optional.
-	apiCfg := apiConfig{}
+	apiCfg := apiConfig{
+		fileserverHits: atomic.Int32{},
+		db:             dbQueries,
+	}
 
 	mux := http.NewServeMux()
 	handler := http.StripPrefix("/app/", http.FileServer(http.Dir(".")))
