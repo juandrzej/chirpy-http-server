@@ -18,10 +18,11 @@ badd +1 enter_psql
 badd +16 ~/Code/chirpy-http-server/.envrc
 badd +1 start_postgresql
 badd +1 start_server
-badd +0 .gitignore
+badd +1 .gitignore
+badd +1 .env
 argglobal
 %argdel
-edit .gitignore
+edit main.go
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -41,7 +42,7 @@ set winwidth=1
 exe 'vert 1resize ' . ((&columns * 118 + 118) / 237)
 exe 'vert 2resize ' . ((&columns * 118 + 118) / 237)
 argglobal
-balt main.go
+balt .env
 setlocal foldmethod=manual
 setlocal foldexpr=0
 setlocal foldmarker={{{,}}}
@@ -74,12 +75,12 @@ setlocal foldnestmax=20
 setlocal foldenable
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 16 - ((15 * winheight(0) + 26) / 53)
+let s:l = 9 - ((8 * winheight(0) + 26) / 53)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 16
-normal! 05|
+keepjumps 9
+normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 118 + 118) / 237)
 exe 'vert 2resize ' . ((&columns * 118 + 118) / 237)
