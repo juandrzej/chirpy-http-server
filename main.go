@@ -7,30 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"sync/atomic"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/juandrzej/chirpy-http-server/internal/database"
 	_ "github.com/lib/pq"
 )
-
-type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-}
-
-type Chirp struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Body      string    `json:"body"`
-	UserId    uuid.UUID `json:"user_id"`
-}
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
@@ -95,131 +77,6 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(body)
-}
-
-func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Body string `json:"body"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameteres")
-		return
-	}
-
-	if len(params.Body) > 140 {
-		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
-		return
-	}
-
-	params.Body = cleanChirp(params.Body)
-
-	respondWithJSON(w, http.StatusOK, map[string]string{"cleaned_body": params.Body})
-}
-
-func cleanChirp(body string) string {
-	forbiddenWords := []string{"kerfuffle", "sharbert", "fornax"}
-	words := strings.Split(body, " ")
-
-	for i, word := range words {
-		for _, forbiddenWord := range forbiddenWords {
-			if strings.ToLower(word) == forbiddenWord {
-				words[i] = "****"
-			}
-		}
-	}
-
-	return strings.Join(words, " ")
-}
-
-func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Email string `json:"email"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameteres")
-		return
-	}
-
-	dbUser, err := cfg.db.CreateUser(r.Context(), params.Email)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "User could not be created.")
-		return
-	}
-
-	respondWithJSON(w, http.StatusCreated, User{
-		ID:        dbUser.ID,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
-		Email:     dbUser.Email,
-	})
-}
-
-func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Body   string    `json:"body"`
-		UserId uuid.UUID `json:"user_id"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameteres")
-		return
-	}
-
-	if len(params.Body) > 140 {
-		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
-		return
-	}
-
-	params.Body = cleanChirp(params.Body)
-
-	dbChirp, err := cfg.db.CreateChirp(r.Context(), database.CreateChirpParams{
-		Body:   params.Body,
-		UserID: params.UserId,
-	})
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Chirp could not be created.")
-		return
-	}
-
-	respondWithJSON(w, http.StatusCreated, Chirp{
-		ID:        dbChirp.ID,
-		CreatedAt: dbChirp.CreatedAt,
-		UpdatedAt: dbChirp.UpdatedAt,
-		Body:      dbChirp.Body,
-		UserId:    dbChirp.UserID,
-	})
-}
-
-func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
-	dbChirps, err := cfg.db.GetChirps(r.Context())
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps.")
-		return
-	}
-
-	responseChirps := []Chirp{}
-	for _, dbChirp := range dbChirps {
-		responseChirps = append(responseChirps, Chirp{
-			ID:        dbChirp.ID,
-			CreatedAt: dbChirp.CreatedAt,
-			UpdatedAt: dbChirp.UpdatedAt,
-			Body:      dbChirp.Body,
-			UserId:    dbChirp.UserID,
-		})
-	}
-
-	respondWithJSON(w, http.StatusOK, responseChirps)
 }
 
 func main() {
