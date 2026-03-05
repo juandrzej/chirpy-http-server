@@ -1,5 +1,11 @@
 package auth
 
-func HashPassword(password string) (string, error)
+import "github.com/alexedwards/argon2id"
 
-func CheckPasswordHash(password, hash string) (bool, error)
+func HashPassword(password string) (string, error) {
+	return argon2id.CreateHash(password, argon2id.DefaultParams)
+}
+
+func CheckPasswordHash(password, hash string) (bool, error) {
+	return argon2id.ComparePasswordAndHash(password, hash)
+}
