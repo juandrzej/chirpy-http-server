@@ -65,7 +65,6 @@ func (cfg *apiConfig) handlerLoginUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
-		// ExpiresInSeconds *int   `json:"expires_in_seconds"`
 	}
 
 	// Take parameteres from request and put them into struct.
@@ -90,15 +89,7 @@ func (cfg *apiConfig) handlerLoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create JWT for user.
-	// const maxExpiry = time.Hour
-	// var expiry time.Duration
-	// if params.ExpiresInSeconds == nil || time.Duration(*params.ExpiresInSeconds)*time.Second > maxExpiry {
-	// 	expiry = maxExpiry
-	// } else {
-	// 	expiry = time.Duration(*params.ExpiresInSeconds) * time.Second
-	// }
-	expiry := time.Hour
-	token, err := auth.MakeJWT(dbUser.ID, cfg.secret, expiry)
+	token, err := auth.MakeJWT(dbUser.ID, cfg.secret, time.Hour)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Could not create JWT")
 		return
