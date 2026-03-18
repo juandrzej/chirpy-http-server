@@ -8,45 +8,39 @@ import (
 )
 
 func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
-	// First find the refresh refreshToken.
-	refreshToken, err := auth.GetBearerToken(r.Header)
+	jwt, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Could not get refresh token")
+		respondWithError(w, http.StatusUnauthorized, "Could not find JWT in headers.")
 		return
 	}
 
-	// Locate user in the database using the token.
-	dbUser, err := cfg.db.GetUserFromRefreshToken(r.Context(), refreshToken)
+	dbUser, err := cfg.db.GetUserFromRefreshToken(r.Context(), jwt)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Could not find user in database")
+		respondWithError(w, http.StatusUnauthorized, "Could not find user in database.")
 		return
 	}
 
-	// Create JWT for user.
-	jwt, err := auth.MakeJWT(dbUser.ID, cfg.secret, time.Hour)
+	jwtId, err := auth.MakeJWT(dbUser.ID, cfg.secret, time.Hour)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Could not create JWT")
+		respondWithError(w, http.StatusUnauthorized, "Could not create JWT.")
 		return
 	}
 
-	// Respond with new token for the user.
 	type response struct {
 		Token string `json:"token"`
 	}
-	respondWithJSON(w, http.StatusOK, response{Token: jwt})
+	respondWithJSON(w, http.StatusOK, response{Token: jwtId})
 }
 func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
-	// First find the refresh refreshToken.
-	refreshToken, err := auth.GetBearerToken(r.Header)
+	jwt, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Could not get refresh token")
+		respondWithError(w, http.StatusUnauthorized, "Could not find JWT in headers.")
 		return
 	}
 
-	// Revoke the user refresh token.
-	_, err = cfg.db.RevokeRefreshToken(r.Context(), refreshToken)
+	_, err = cfg.db.RevokeRefreshToken(r.Context(), jwt)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Could not revoke token")
+		respondWithError(w, http.StatusUnauthorized, "Could not revoke token.")
 		return
 	}
 
