@@ -11,6 +11,7 @@ import (
 	"github.com/juandrzej/chirpy-http-server/internal/database"
 )
 
+// Chirp struct to pass all needed data to func responder.
 type Chirp struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -19,11 +20,25 @@ type Chirp struct {
 	UserId    uuid.UUID `json:"user_id"`
 }
 
+func cleanChirp(body string) string {
+	forbiddenWords := []string{"kerfuffle", "sharbert", "fornax"}
+	words := strings.Split(body, " ")
+	for i, word := range words {
+		for _, forbiddenWord := range forbiddenWords {
+			if strings.ToLower(word) == forbiddenWord {
+				words[i] = "****"
+			}
+		}
+	}
+	return strings.Join(words, " ")
+}
+
 func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body string `json:"body"`
 	}
 
+	// Take parameteres from request and put them into struct.
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -32,29 +47,14 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if chirp passes internal policy.
 	if len(params.Body) > 140 {
 		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
 		return
 	}
-
 	params.Body = cleanChirp(params.Body)
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"cleaned_body": params.Body})
-}
-
-func cleanChirp(body string) string {
-	forbiddenWords := []string{"kerfuffle", "sharbert", "fornax"}
-	words := strings.Split(body, " ")
-
-	for i, word := range words {
-		for _, forbiddenWord := range forbiddenWords {
-			if strings.ToLower(word) == forbiddenWord {
-				words[i] = "****"
-			}
-		}
-	}
-
-	return strings.Join(words, " ")
 }
 
 func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +62,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 		Body string `json:"body"`
 	}
 
+	// Take parameteres from request and put them into struct.
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -150,4 +151,21 @@ func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, responseChirp)
+}
+
+func (cfg *apiConfig) handlerDeleteChirp(w http.ResponseWriter, r *http.Request) {
+	chirpIDString := r.PathValue("chirpID")
+	chirpID, err := uuid.Parse(chirpIDString)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't parse chirp ID.")
+		return
+	}
+
+	dbChirp, err := cfg.db.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Couldn't find chirp.")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
