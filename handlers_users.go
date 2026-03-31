@@ -148,6 +148,16 @@ func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *apiConfig) handlerUpgradeUser(w http.ResponseWriter, r *http.Request) {
+	key, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Could not find ApiKey in headers.")
+		return
+	}
+	if key != cfg.polkaKey {
+		respondWithError(w, http.StatusUnauthorized, "Invalid ApiKey.")
+		return
+	}
+
 	type parameters struct {
 		Event string `json:"event"`
 		Data  struct {
@@ -155,7 +165,7 @@ func (cfg *apiConfig) handlerUpgradeUser(w http.ResponseWriter, r *http.Request)
 		} `json:"data"`
 	}
 	params := parameters{}
-	err := json.NewDecoder(r.Body).Decode(&params)
+	err = json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Could not decode parameteres.")
 		return
