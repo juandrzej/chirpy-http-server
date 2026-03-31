@@ -71,10 +71,28 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 }
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
-	dbChirps, err := cfg.db.GetChirps(r.Context())
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not retrieve chirps.")
-		return
+	var dbChirps []database.Chirp
+	authorIDString := r.URL.Query().Get("author_id")
+	if authorIDString != "" {
+		authorID, err := uuid.Parse(authorIDString)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Could not parse author ID.")
+			return
+		}
+		dbChirps, err = cfg.db.GetChirpsByAuthor(r.Context(), authorID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Could not retrieve chirps.")
+			return
+		}
+
+	} else {
+		var err error
+		dbChirps, err = cfg.db.GetChirps(r.Context())
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Could not retrieve chirps.")
+			return
+		}
+
 	}
 
 	responseChirps := []Chirp{}
@@ -95,7 +113,7 @@ func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
 	chirpIDString := r.PathValue("chirpID")
 	chirpID, err := uuid.Parse(chirpIDString)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse chirp ID.")
+		respondWithError(w, http.StatusBadRequest, "Could not parse chirp ID.")
 		return
 	}
 
