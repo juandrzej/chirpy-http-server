@@ -45,7 +45,7 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	if err != nil {
 		return uuid.Nil, err
 	} else if !token.Valid {
-		return uuid.Nil, errors.New("invalid token")
+		return uuid.Nil, errors.New("Invalid token.")
 	} else {
 		return uuid.Parse(claims.Subject)
 	}
@@ -54,11 +54,11 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 func GetBearerToken(headers http.Header) (string, error) {
 	token := headers.Get("Authorization")
 	if len(token) == 0 {
-		return "", errors.New("no authorization in headers")
+		return "", errors.New("No authorization in headers.")
 	}
 
 	if !strings.HasPrefix(token, "Bearer ") {
-		return "", errors.New("token does not start with Bearer")
+		return "", errors.New("Token does not start with 'Bearer '.")
 	}
 	token = strings.TrimPrefix(token, "Bearer ")
 
@@ -69,4 +69,18 @@ func MakeRefreshToken() string {
 	key := make([]byte, 32)
 	rand.Read(key)
 	return hex.EncodeToString(key)
+}
+
+func GetAPIKey(headers http.Header) (string, error) {
+	key := headers.Get("Authorization")
+	if len(key) == 0 {
+		return "", errors.New("No authorization in headers.")
+	}
+
+	if !strings.HasPrefix(key, "ApiKey ") {
+		return "", errors.New("Key does not start with ApiKey.")
+	}
+	key = strings.TrimPrefix(key, "ApiKey ")
+
+	return key, nil
 }
