@@ -31,7 +31,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 	params := parameters{}
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not decode parameteres.")
+		respondWithError(w, http.StatusBadRequest, "Could not decode parameteres.")
 		return
 	}
 
@@ -66,7 +66,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 		CreatedAt: dbChirp.CreatedAt,
 		UpdatedAt: dbChirp.UpdatedAt,
 		Body:      dbChirp.Body,
-		UserId:    dbChirp.UserID,
+		UserID:    dbChirp.UserID,
 	})
 }
 
@@ -84,7 +84,7 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: dbChirp.CreatedAt,
 			UpdatedAt: dbChirp.UpdatedAt,
 			Body:      dbChirp.Body,
-			UserId:    dbChirp.UserID,
+			UserID:    dbChirp.UserID,
 		})
 	}
 
@@ -110,7 +110,7 @@ func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: dbChirp.CreatedAt,
 		UpdatedAt: dbChirp.UpdatedAt,
 		Body:      dbChirp.Body,
-		UserId:    dbChirp.UserID,
+		UserID:    dbChirp.UserID,
 	}
 
 	respondWithJSON(w, http.StatusOK, responseChirp)
