@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -73,6 +74,8 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	var dbChirps []database.Chirp
 	authorIDString := r.URL.Query().Get("author_id")
+	sorting := r.URL.Query().Get("sort")
+
 	if authorIDString != "" {
 		authorID, err := uuid.Parse(authorIDString)
 		if err != nil {
@@ -93,6 +96,10 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+	}
+
+	if sorting == "desc" {
+		sort.Slice(dbChirps, func(i, j int) bool { return dbChirps[i].CreatedAt.After(dbChirps[j].CreatedAt) })
 	}
 
 	responseChirps := []Chirp{}
